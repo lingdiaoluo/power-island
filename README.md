@@ -5,6 +5,12 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4.svg)](https://dotnet.microsoft.com)
 [![platform](https://img.shields.io/badge/platform-Windows%2011-0078D4.svg)](#已知限制)
 
+<p align="center">
+  <a href="https://github.com/lingdiaoluo/power-island/releases/latest">
+    <img src="https://img.shields.io/badge/%E2%AC%87%E4%B8%8B%E8%BD%BD-Windows%20x64-16a34a?style=for-the-badge&logo=windows11&logoColor=white" height="44" alt="下载 PowerIsland" />
+  </a>
+</p>
+
 一个轻量的 Windows 外设电量小工具：**主面板 + 任务栏电量图标 + 悬停气泡**，原生读取无线鼠标／键盘／耳机的电量。
 
 为 **VGN F1 MOBA** 做了原生协议支持，不需要安装 VGN HUB，也不改你的任何设备设置。
@@ -50,6 +56,12 @@
 
 - 关掉主窗口不会退出，程序留在托盘继续刷新；右键托盘图标 → `退出` 才是真正退出
 - 首次运行如果托盘图标被 Windows 收进 `^` 折叠区，拖到任务栏固定即可（程序也会自动向系统申请常显）
+
+<p align="center">
+  <img src="assets/download-card.png" width="620" alt="扫码下载 PowerIsland" />
+</p>
+
+> 手机扫码可以直接打开下载页，把这张图发给朋友最省事。
 
 ### 自己编译
 
@@ -119,6 +131,24 @@ PowerIsland/
 - 蓝牙电量依赖系统是否上报该属性，部分设备需要厂商驱动才会出现
 - 未知协议的接收器读不到电量（会显示 `—`），欢迎提交 HID 报告描述符来补协议
 - 托盘图标常显是通过系统的 `NotifyIconSettings\IsPromoted` 实现的，用户可随时在任务栏设置里改回
+
+## 发版（维护者）
+
+`tools/release.ps1` 把「编译 → 打 tag → 建 Release → 传 exe」合成一条命令：
+
+```powershell
+# 一次性准备：在 https://github.com/settings/tokens 生成带 repo 权限的 token
+$env:GITHUB_TOKEN = "ghp_xxx"
+
+# 发版，版本号会同时写进程序集
+.\tools\release.ps1 -Version 1.0.1
+
+# 自定义更新说明 / 先存草稿
+.\tools\release.ps1 -Version 1.1.0 -Notes "新增 XXX 支持" -Draft
+```
+
+不传 `-Notes` 时，脚本会用上一个 tag 到 HEAD 的提交信息自动生成更新日志，
+并在末尾附上文件大小和 SHA-256，方便使用者校验。
 
 ## 许可证
 
