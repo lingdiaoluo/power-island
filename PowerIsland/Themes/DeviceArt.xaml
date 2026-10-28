@@ -7,6 +7,12 @@
                RenderOptions.BitmapScalingMode="HighQuality" />
     </DataTemplate>
 
+    <!-- ================= 雷蛇 毒蝰 Viper V2 Pro（白色实拍抠图） ================= -->
+    <DataTemplate x:Key="ArtRazerViper">
+        <Image Source="/Assets/device-razer-viper.png" Stretch="Uniform"
+               RenderOptions.BitmapScalingMode="HighQuality" />
+    </DataTemplate>
+
     <!-- ================= 雷蛇 旋风黑鲨 BlackShark V2 Pro（官方图抠图） ================= -->
     <DataTemplate x:Key="ArtRazerHeadset">
         <Image Source="/Assets/device-razer-headset.png" Stretch="Uniform"

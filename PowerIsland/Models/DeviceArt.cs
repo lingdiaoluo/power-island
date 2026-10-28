@@ -7,13 +7,13 @@ public static class DeviceArt
     /// <summary>按厂商 + 设备类型挑外观图模板。</summary>
     public static string KeyFor(ushort vid, DeviceKind kind)
     {
-        // 雷蛇：耳机用官网白色版抠图，鼠标暂无官方白色渲染图，用通用白色鼠标
+        // 雷蛇：耳机用官网白色渲染图，鼠标用白色毒蝰实拍抠图
         if (vid == 0x1532)
         {
             return kind switch
             {
                 DeviceKind.Headset => "ArtRazerHeadset",
-                DeviceKind.Mouse => "ArtMouseGeneric",
+                DeviceKind.Mouse => "ArtRazerViper",
                 DeviceKind.Keyboard => "ArtKeyboard",
                 _ => "ArtOther"
             };
