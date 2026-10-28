@@ -1,0 +1,44 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Color x:Key="ColorPage">#141619</Color>
+    <Color x:Key="ColorCard">#1E2126</Color>
+    <Color x:Key="ColorSubtle">#191C20</Color>
+    <Color x:Key="ColorText">#E9EBEE</Color>
+    <Color x:Key="ColorTextSoft">#8D949E</Color>
+    <Color x:Key="ColorHairline">#2A2E34</Color>
+    <Color x:Key="ColorChipBg">#23262C</Color>
+    <Color x:Key="ColorChipBorder">#33383F</Color>
+    <Color x:Key="ColorTrack">#2A2E34</Color>
+    <Color x:Key="ColorHeader">#171A1E</Color>
+
+    <SolidColorBrush x:Key="Brush.Page" Color="{StaticResource ColorPage}" />
+    <SolidColorBrush x:Key="Brush.Card" Color="{StaticResource ColorCard}" />
+    <SolidColorBrush x:Key="Brush.Subtle" Color="{StaticResource ColorSubtle}" />
+    <SolidColorBrush x:Key="Brush.Text" Color="{StaticResource ColorText}" />
+    <SolidColorBrush x:Key="Brush.TextSoft" Color="{StaticResource ColorTextSoft}" />
+    <SolidColorBrush x:Key="Brush.Hairline" Color="{StaticResource ColorHairline}" />
+    <SolidColorBrush x:Key="Brush.ChipBg" Color="{StaticResource ColorChipBg}" />
+    <SolidColorBrush x:Key="Brush.ChipBorder" Color="{StaticResource ColorChipBorder}" />
+    <SolidColorBrush x:Key="Brush.Track" Color="{StaticResource ColorTrack}" />
+    <SolidColorBrush x:Key="Brush.Header" Color="{StaticResource ColorHeader}" />
+
+    <SolidColorBrush x:Key="Brush.Accent" Color="#22C55E" />
+    <SolidColorBrush x:Key="Brush.AccentSoft" Color="#16301F" />
+    <SolidColorBrush x:Key="Brush.Warn" Color="#FBBF24" />
+    <SolidColorBrush x:Key="Brush.Danger" Color="#F87171" />
+    <SolidColorBrush x:Key="Brush.Hover" Color="#262A30" />
+
+    <LinearGradientBrush x:Key="Brush.ArtPanel" StartPoint="0.15,0" EndPoint="0.85,1">
+        <GradientStop Color="#262A30" Offset="0" />
+        <GradientStop Color="#1B1E22" Offset="1" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="Brush.AccentGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#2BC46B" Offset="0" />
+        <GradientStop Color="#12914C" Offset="1" />
+    </LinearGradientBrush>
+
+    <DropShadowEffect x:Key="CardShadow" BlurRadius="22" ShadowDepth="2" Direction="270"
+                      Color="#000000" Opacity="0.35" />
+</ResourceDictionary>

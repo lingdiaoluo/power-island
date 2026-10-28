@@ -1,0 +1,27 @@
+# 构建产物
+bin/
+obj/
+publish/
+dist/
+*.user
+*.suo
+*.userprefs
+.vs/
+.vscode/
+
+# 本地发布 / 打包
+*.exe
+*.pdb
+*.dll
+!PowerIsland/Assets/*.dll
+
+# 工作区私有数据
+.workbuddy/
+
+# 日志与临时文件
+*.log
+out*.log
+err*.log
+*.tmp
+Thumbs.db
+desktop.ini
