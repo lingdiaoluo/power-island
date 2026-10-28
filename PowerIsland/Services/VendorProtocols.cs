@@ -15,7 +15,7 @@ public sealed record KnownDevice(
     int Protocol,
     DeviceKind Kind = DeviceKind.Mouse);
 
-public readonly record struct BatteryReading(int Level, bool Wired);
+public readonly record struct BatteryReading(int Level, bool Wired, bool Charging = false);
 
 /// <summary>
 /// Compx 2.4G 接收器（VGN / VXE / ATK / Pulsar 同源）的私有电量协议。

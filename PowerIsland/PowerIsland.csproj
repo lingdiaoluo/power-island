@@ -12,7 +12,7 @@
     <AssemblyName>PowerIsland</AssemblyName>
     <RootNamespace>PowerIsland</RootNamespace>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
-    <Version>1.0.0</Version>
+    <Version>1.2.0</Version>
     <Company>PowerIsland</Company>
     <Product>电量岛</Product>
     <Platforms>x64</Platforms>
@@ -25,6 +25,8 @@
     <ApplicationDefinition Include="App.xaml" SubType="Designer" Generator="MSBuild:Compile" />
     <Resource Include="Assets\app.ico" />
     <Resource Include="Assets\device-mouse.png" />
+    <Resource Include="Assets\device-razer-viper.png" />
+    <Resource Include="Assets\device-razer-headset.png" />
   </ItemGroup>
 
 </Project>

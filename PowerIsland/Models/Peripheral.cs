@@ -100,14 +100,7 @@ public sealed class Peripheral : INotifyPropertyChanged
             ? $"{LinkLabel} · 充电中"
             : LinkLabel;
 
-    public string ArtKey => Kind switch
-    {
-        DeviceKind.Mouse => "ArtMouse",
-        DeviceKind.Keyboard => "ArtKeyboard",
-        DeviceKind.Gamepad => "ArtGamepad",
-        DeviceKind.Headset => "ArtHeadset",
-        _ => "ArtOther"
-    };
+    public string ArtKey => DeviceArt.KeyFor(Vid, Kind);
 
     public string TrayName
     {

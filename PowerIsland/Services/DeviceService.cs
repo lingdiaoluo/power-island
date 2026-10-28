@@ -66,14 +66,16 @@ public sealed class DeviceService
                                                              && h.UsagePage == known.UsagePage && h.Usage == known.Usage);
             HidInterface? wired = hid.FirstOrDefault(h => h.Vid == known.Vid && h.Pid == known.PidWired
                                                           && h.UsagePage == known.UsagePage && h.Usage == known.Usage);
-            if (wireless == null && wired == null) continue;
+            string id = $"{known.Vid:X4}:{known.PidWireless:X4}";
+            bool present = wireless != null || wired != null;
+            if (!ShouldShow(settings, id, present)) continue;
 
             HidInterface? source = wireless ?? wired;
-            BatteryReading? reading = CompxReader.Query(source!, known.Protocol);
+            BatteryReading? reading = present ? CompxReader.Query(source!, known.Protocol) : null;
 
             result.Add(new Peripheral
             {
-                Id = $"{known.Vid:X4}:{known.PidWireless:X4}",
+                Id = id,
                 Name = known.Name,
                 Meta = known.Meta,
                 Vendor = "VGN / VXE / ATK",
@@ -81,14 +83,43 @@ public sealed class DeviceService
                 Link = reading?.Wired == true ? LinkKind.Wired
                        : wireless == null ? LinkKind.Wired : LinkKind.Wireless24,
                 Battery = reading?.Level,
-                Online = true,
+                Online = present,
                 BatteryReadable = true,
                 Vid = known.Vid,
                 Pid = known.PidWireless
             });
         }
 
-        foreach (BluetoothDeviceInfo info in bt)
+        foreach (RazerDevice razer in RazerReader.Devices)
+        {
+            bool hasWireless = hid.Any(h => h.Vid == RazerReader.RazerVid && h.Pid == razer.PidWireless);
+            bool hasWired = hid.Any(h => h.Vid == RazerReader.RazerVid && h.Pid == razer.PidWired);
+            bool present = hasWireless || hasWired;
+
+            string razerId = $"{RazerReader.RazerVid:X4}:{razer.PidWireless:X4}";
+            if (!ShouldShow(settings, razerId, present)) continue;
+
+            bool wireless = hasWireless;
+            BatteryReading? razerReading = present ? RazerReader.Query(razer, hid, wireless) : null;
+
+            result.Add(new Peripheral
+            {
+                Id = razerId,
+                Name = razer.Name,
+                Meta = razer.Meta,
+                Vendor = "Razer",
+                Kind = razer.Kind,
+                Link = wireless ? LinkKind.Wireless24 : LinkKind.Wired,
+                Battery = razerReading?.Level,
+                Charging = razerReading?.Charging ?? false,
+                Online = present,
+                BatteryReadable = true,
+                Vid = RazerReader.RazerVid,
+                Pid = wireless ? razer.PidWireless : razer.PidWired
+            });
+        }
+
+        foreach (BluetoothDeviceInfo info in settings.MyDevices.Count == 0 ? bt : new List<BluetoothDeviceInfo>())
         {
             if (result.Any(r => string.Equals(r.Name, info.Name, StringComparison.OrdinalIgnoreCase))) continue;
 
@@ -135,6 +166,10 @@ public sealed class DeviceService
         return result;
     }
 
+    /// <summary>自动模式：只显示实际插着的；手动添加过：只显示选中的（没插也显示为未连接）。</summary>
+    private static bool ShouldShow(AppSettings settings, string id, bool present)
+        => settings.MyDevices.Count > 0 ? settings.MyDevices.Contains(id) : present;
+
     private static DeviceKind GuessKind(string name)
     {
         string n = name.ToLowerInvariant();
@@ -168,7 +203,7 @@ public sealed class DeviceService
             // 单次读取失败时保留上一次的数值，不要闪成“—”
             existing.Battery = fresh.Battery ?? (fresh.Online ? existing.Battery : null);
             existing.BatteryReadable = fresh.BatteryReadable;
-            existing.Charging = false;
+            existing.Charging = fresh.Charging;
         }
 
         for (int i = Devices.Count - 1; i >= 0; i--)

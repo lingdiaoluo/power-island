@@ -73,7 +73,45 @@
 
 > 有线模式该协议不返回可靠电量，程序会保留上一次的数值。
 
-## 4. 蓝牙设备
+## 4. 雷蛇经典 90 字节协议（Viper V2 Pro 等）
+
+VID 固定为 `0x1532`。控制通道是那个 **Feature Report 长度 ≥ 90 字节** 的顶层集合
+（雷蛇不会把它标成厂商页，所以只能按长度找）。
+
+请求/应答都是 90 字节结构（若集合带 Report ID，则缓冲区前面多 1 字节 `0x00`）：
+
+| 偏移 | 字段 | 取值 |
+| --- | --- | --- |
+| 0 | status | 请求 `0x00`；应答 `0x02` 成功（`0x01` 忙、`0x04` 无响应、`0x05` 不支持） |
+| 1 | transaction_id | 按型号查表，Viper V2 Pro = `0x1F`，多数耳机 = `0xFF` |
+| 2–3 | remaining_packets | `0x0000` |
+| 4 | protocol_type | `0x00` |
+| 5 | data_size | `0x02` |
+| 6 | command_class | `0x07`（电源类） |
+| 7 | command_id | `0x80` 取电量 / `0x84` 取充电状态 |
+| 8–87 | arguments | 电量在 `[8]` |
+| 88 | crc | `XOR(2..87)` |
+| 89 | reserved | `0x00` |
+
+发送用 `HidD_SetFeature`（失败则退回 `WriteFile`），再用 `HidD_GetFeature` 收应答。
+校验 `status`、`transaction_id`、`command_class`、`command_id` 全部回显一致。
+
+**电量缩放**：鼠标一代返回 0–255，需 `× 100 / 255`；耳机一般直接返回 0–100。
+程序在设备表里用 `RazerScale` 显式指定，未知设备用「≤100 视为百分比」的启发式。
+
+## 5. 雷蛇 2023 款耳机的 64 字节 PA/PI 帧（实验性）
+
+BlackShark V2 Pro (2023)（`0x0555`）的固件**不再实现上面的经典协议**，
+Feature Report 全部超时，只能走 64 字节中断 OUT/IN 报告（Report ID `0x02`）：
+
+请求帧：`02 80 <inner_len> 00 00 | 50 41 00 <target> <cmd> …`（`50 41` 即 ASCII `PA`）
+
+应答帧里带 ASCII `PI`（`50 49`）子帧，命令 `0x21` 后面跟电量（0–100 原值），`0x2A` 后面跟充电标志。
+
+> 这段是社区逆向结果（Unraid / lemmy 上的分析），程序里做了宽松的 `PI` 扫描 + 原始报文入库，
+> 因此可能需要在真机上再调。解析失败时 `app.log` 会留下最后一帧十六进制。
+
+## 6. 蓝牙设备
 
 不碰私有协议，直接读 Windows 自己缓存的关联端点（AEP）属性：
 
@@ -87,7 +125,7 @@ var devices = await DeviceInformation.FindAllAsync(selector, props,
 `System.Devices.BatteryLife` 是 `byte`，与「设置 → 蓝牙」显示的电量同源。
 没有蓝牙适配器时该调用可能长时间不返回，所以程序把它放在 HID 结果之后，并加 1.5 秒超时。
 
-## 5. Win32 上的坑（重要）
+## 7. Win32 上的坑（重要）
 
 1. **同步 `ReadFile` 会永久阻塞**
    设备不回包时，同步句柄的 `ReadFile` 不会超时。因此每台设备使用一个**常驻后台读线程**：
@@ -107,7 +145,7 @@ var devices = await DeviceInformation.FindAllAsync(selector, props,
 5. **不要用 `WaitForSingleObject(handle)` 判断有无数据**
    同步句柄在写入完成后会一直处于已信号状态，等到信号不代表有报告可读。
 
-## 6. 新增型号
+## 8. 新增型号
 
 1. 插上接收器，用 `HidInventory` 或任何 HID 查看器（如 WebHID 的 USB 设备查看器）确认
    `VID / PID` 与厂商集合的 `UsagePage / Usage`。

@@ -7,6 +7,84 @@
                RenderOptions.BitmapScalingMode="HighQuality" />
     </DataTemplate>
 
+    <!-- ================= 雷蛇 旋风黑鲨 BlackShark V2 Pro（官方图抠图） ================= -->
+    <DataTemplate x:Key="ArtRazerHeadset">
+        <Image Source="/Assets/device-razer-headset.png" Stretch="Uniform"
+               RenderOptions.BitmapScalingMode="HighQuality" />
+    </DataTemplate>
+
+    <!-- ================= 通用鼠标（非 VGN 机型） ================= -->
+    <DataTemplate x:Key="ArtMouseGeneric">
+        <Viewbox Stretch="Uniform">
+            <Canvas Width="200" Height="200">
+                <Ellipse Canvas.Left="54" Canvas.Top="160" Width="92" Height="22" Opacity="0.45">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush>
+                            <GradientStop Color="#2E3540" Offset="0" />
+                            <GradientStop Color="#002E3540" Offset="1" />
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                </Ellipse>
+
+                <Path Data="M100,24
+                              C122,24 134,29 137,42
+                              C140,58 142,80 142,104
+                              C142,132 132,156 117,166
+                              C110,171 104,173 100,173
+                              C96,173 90,171 83,166
+                              C68,156 58,132 58,104
+                              C58,80 60,58 63,42
+                              C66,29 78,24 100,24 Z">
+                    <Path.Fill>
+                        <LinearGradientBrush StartPoint="0.15,0" EndPoint="0.85,1">
+                            <GradientStop Color="#FFFFFF" Offset="0" />
+                            <GradientStop Color="#F7F8FA" Offset="0.45" />
+                            <GradientStop Color="#E3E7EC" Offset="0.85" />
+                            <GradientStop Color="#D2D7DE" Offset="1" />
+                        </LinearGradientBrush>
+                    </Path.Fill>
+                    <Path.Stroke>
+                        <SolidColorBrush Color="#C4CAD2" />
+                    </Path.Stroke>
+                    <Path.StrokeThickness>1.1</Path.StrokeThickness>
+                </Path>
+
+                <Path Data="M100,25 L100,72" Stroke="#C2C8D0" StrokeThickness="1.2" />
+                <Path Data="M62,72 C80,78 120,78 138,72" Stroke="#C2C8D0" StrokeThickness="1.2" />
+
+                <Rectangle Canvas.Left="92" Canvas.Top="34" Width="16" Height="36" RadiusX="8" RadiusY="8"
+                           Fill="#F0F2F5" Stroke="#D3D8DE" StrokeThickness="0.9" />
+                <Rectangle Canvas.Left="95" Canvas.Top="38" Width="10" Height="28" RadiusX="5" RadiusY="5">
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#4E555E" Offset="0" />
+                            <GradientStop Color="#22262B" Offset="0.5" />
+                            <GradientStop Color="#434A52" Offset="1" />
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+
+                <Rectangle Canvas.Left="95" Canvas.Top="80" Width="10" Height="11" RadiusX="3.4" RadiusY="3.4"
+                           Fill="#EDF0F3" Stroke="#CCD2D9" StrokeThickness="0.9" />
+
+                <Rectangle Canvas.Left="135" Canvas.Top="92" Width="7" Height="16" RadiusX="3.5" RadiusY="3.5"
+                           Fill="#E8EBEF" Stroke="#C9CFD6" StrokeThickness="0.9" />
+                <Rectangle Canvas.Left="135" Canvas.Top="112" Width="7" Height="12" RadiusX="3.5" RadiusY="3.5"
+                           Fill="#E8EBEF" Stroke="#C9CFD6" StrokeThickness="0.9" />
+
+                <Path Data="M100,26 C119,26 130,31 132,42 C126,36 115,33 100,33 C85,33 74,36 68,42
+                              C70,31 81,26 100,26 Z" Opacity="0.8">
+                    <Path.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#FFFFFF" Offset="0" />
+                            <GradientStop Color="#00FFFFFF" Offset="1" />
+                        </LinearGradientBrush>
+                    </Path.Fill>
+                </Path>
+            </Canvas>
+        </Viewbox>
+    </DataTemplate>
+
     <!-- ================= 键盘（俯视） ================= -->
     <DataTemplate x:Key="ArtKeyboard">
         <Viewbox Stretch="Uniform">

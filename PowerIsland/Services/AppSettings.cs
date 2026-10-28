@@ -12,6 +12,9 @@ public sealed class AppSettings
     public bool LowBatteryNotify { get; set; } = true;
     public bool TrayShowNumber { get; set; } = true;
     public bool ShowUnknownDevices { get; set; }
+
+    /// <summary>用户在「添加外设」里勾选的型号；为空表示自动显示全部已识别的设备。</summary>
+    public List<string> MyDevices { get; set; } = new();
     public bool DarkTheme { get; set; }
     public bool ShowedTrayHint { get; set; }
     public double WindowWidth { get; set; } = 940;

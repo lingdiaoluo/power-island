@@ -49,7 +49,7 @@
                     <TextBlock Text="电量岛" FontSize="21" FontWeight="SemiBold" VerticalAlignment="Center" />
                     <Border Background="{DynamicResource Brush.Subtle}" CornerRadius="6" Padding="7,1,7,2"
                             Margin="9,2,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="v1.0.0" FontSize="10.5" Foreground="{DynamicResource Brush.TextSoft}" />
+                        <TextBlock x:Name="VersionText" Text="v1.2.0" FontSize="10.5" Foreground="{DynamicResource Brush.TextSoft}" />
                     </Border>
                 </StackPanel>
                 <TextBlock Text="2.4G 无线设备 · 实时电量" FontSize="12" Margin="1,4,0,0"
@@ -59,6 +59,8 @@
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="{Binding StatusSummary}" FontSize="12" VerticalAlignment="Center"
                            Margin="0,0,10,0" Foreground="{DynamicResource Brush.TextSoft}" />
+                <Button Style="{StaticResource IconButton}" Click="OnAddDevice" Content="&#xE710;"
+                        ToolTip="添加外设" />
                 <Button x:Name="ThemeButton" Style="{StaticResource IconButton}" Click="OnToggleTheme"
                         Content="{Binding ThemeGlyph}" ToolTip="切换深浅色" />
                 <Button Style="{StaticResource IconButton}" Click="OnRefreshClick" Content="&#xE72C;" ToolTip="立即刷新" />
@@ -180,8 +182,11 @@
                         <TextBlock Text="插上 2.4G 接收器，或让蓝牙外设保持连接后再刷新一次。"
                                    FontSize="12" Margin="0,6,0,0" HorizontalAlignment="Center"
                                    Foreground="{DynamicResource Brush.TextSoft}" />
-                        <Button Content="立即扫描" Style="{StaticResource AccentButton}" Margin="0,16,0,0"
-                                HorizontalAlignment="Center" Click="OnRefreshClick" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0">
+                            <Button Content="立即扫描" Style="{StaticResource GhostButton}" Click="OnRefreshClick" />
+                            <Button Content="添加外设" Style="{StaticResource AccentButton}" Margin="10,0,0,0"
+                                    Click="OnAddDevice" />
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
@@ -320,8 +325,8 @@
             <Grid>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                     <Button Content="立即刷新" Style="{StaticResource AccentButton}" Click="OnRefreshClick" />
-                    <Button Content="隐藏在托盘" Style="{StaticResource GhostButton}" Margin="10,0,0,0"
-                            Click="OnHideToTray" />
+                    <Button Content="添加外设" Style="{StaticResource GhostButton}" Margin="10,0,0,0"
+                            Click="OnAddDevice" />
                     <Button Content="打开配置目录" Style="{StaticResource GhostButton}" Margin="10,0,0,0"
                             Click="OnOpenConfigFolder" />
                 </StackPanel>

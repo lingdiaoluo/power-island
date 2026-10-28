@@ -30,8 +30,8 @@
     <SolidColorBrush x:Key="Brush.Hover" Color="#262A30" />
 
     <LinearGradientBrush x:Key="Brush.ArtPanel" StartPoint="0.15,0" EndPoint="0.85,1">
-        <GradientStop Color="#262A30" Offset="0" />
-        <GradientStop Color="#1B1E22" Offset="1" />
+        <GradientStop Color="#3E444C" Offset="0" />
+        <GradientStop Color="#2B3037" Offset="1" />
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="Brush.AccentGradient" StartPoint="0,0" EndPoint="1,1">

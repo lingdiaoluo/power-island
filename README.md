@@ -27,6 +27,7 @@
 - **真实电量，不是估算**：走接收器的 HID 厂商通道直接读百分比，鼠标休眠时如实显示「—」
 - **托盘常驻**：图标直接画出电量数字（`95`），低电量自动变橙／变红
 - **悬停气泡**：鼠标移到托盘图标上，弹出所有设备的电量列表
+- **添加外设**：右上角 `+` 打开型号列表，勾选你要监控的设备；没插的设备也会留在面板上显示「未连接」
 - **多设备**：2.4G 接收器 + 蓝牙设备同时展示，一台一张卡片，带对应外观图
 - **浅色 / 深色**两套自绘主题
 - **低电量提醒**：低于阈值弹系统通知
@@ -35,16 +36,22 @@
 
 ## 支持设备
 
-| 品牌 | 型号 | 协议 |
-| --- | --- | --- |
-| VGN | F1 MOBA / F1 Pro | Compx 17 字节 |
-| VXE | R1 Pro Max / R1 SE+ | Compx 17 字节 |
-| VXE | MAD R / MAD R Major+ | Compx 17 字节 |
-| ATK | F1 Ultimate / A9 Ultimate | Compx 17 字节 |
-| ATK | Zero | Compx 64 字节 |
-| 其他 | 蓝牙鼠标 / 键盘 / 耳机 | Windows 设备电量属性（与「设置 → 蓝牙」一致） |
+| 品牌 | 型号 | 协议 | 状态 |
+| --- | --- | --- | --- |
+| VGN | F1 MOBA / F1 Pro | Compx 17 字节 | 实测通过 |
+| VXE | R1 Pro Max / R1 SE+ | Compx 17 字节 | 同源协议 |
+| VXE | MAD R / MAD R Major+ | Compx 17 字节 | 同源协议 |
+| ATK | F1 Ultimate / A9 Ultimate | Compx 17 字节 | 同源协议 |
+| ATK | Zero | Compx 64 字节 | 同源协议 |
+| Razer | 毒蝰 Viper V2 Pro（`0x00A6` / 有线 `0x00A5`） | 雷蛇经典 90 字节 | 已实现，待真机验证 |
+| Razer | 旋风黑鲨 BlackShark V2 Pro 2020（`0x0528`） | 雷蛇经典 90 字节 | 实验性 |
+| Razer | 旋风黑鲨 BlackShark V2 Pro 2023（`0x0555`） | 64 字节 PA/PI 帧 | 已实现，待真机验证 |
+| 其他 | 蓝牙鼠标 / 键盘 / 耳机 | Windows 设备电量属性（与「设置 → 蓝牙」一致） | 通用 |
 
-设备靠 **VID/PID + 厂商 HID 通道** 识别，不是按名字猜。新增型号只需在 `Services/VendorProtocols.cs` 的 `KnownDevices` 里加一行。
+设备靠 **VID/PID + 厂商 HID 通道** 识别，不是按名字猜。新增型号只需在 `Services/VendorProtocols.cs` 的 `KnownDevices`（或 `RazerReader.Devices`）里加一行。
+
+> 雷蛇 2023 款耳机换了固件协议，代码已按公开逆向结果实现，**尚未在真机上验证**。
+> 如果你的设备读不到，`%APPDATA%\PowerIsland\app.log` 里会有原始的请求/应答十六进制，提 issue 时附上即可。
 
 抓到新设备的数据却不知道怎么解析？见 [docs/PROTOCOL.md](docs/PROTOCOL.md)。
 
@@ -54,6 +61,7 @@
 
 到 [Releases](https://github.com/lingdiaoluo/power-island/releases/latest) 下载 **PowerIsland.exe**（约 75 MB），双击运行。
 
+- 默认自动识别所有已插入的受支持外设；想固定监控某几台，点右上角 `+` 或底部「添加外设」勾选
 - 关掉主窗口不会退出，程序留在托盘继续刷新；右键托盘图标 → `退出` 才是真正退出
 - 首次运行如果托盘图标被 Windows 收进 `^` 折叠区，拖到任务栏固定即可（程序也会自动向系统申请常显）
 
@@ -120,7 +128,12 @@ PowerIsland/
 │  ├─ TrayIconFactory.cs       动态绘制带数字的图标
 │  ├─ TrayHitTest.cs           Shell_NotifyIconGetRect 命中检测
 │  └─ AppSettings.cs           配置、开机自启
-├─ Models/Peripheral.cs        设备模型
+├─ Models/
+│  ├─ Peripheral.cs            设备模型
+│  ├─ DeviceCatalog.cs         「添加外设」的型号目录
+│  └─ DeviceArt.cs             外观图选择
+├─ Services/RazerReader.cs     雷蛇 90 字节 / PA-PI 协议
+├─ Views/AddDeviceDialog.xaml  添加外设对话框
 ├─ Themes/                     浅色 / 深色 / 设备外观图
 └─ Views/                      主窗口、气泡
 ```

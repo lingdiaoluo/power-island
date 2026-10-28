@@ -30,6 +30,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         InitializeComponent();
         DataContext = this;
+
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        if (version != null) VersionText.Text = $"v{version.Major}.{version.Minor}.{version.Build}";
         Loaded += OnLoaded;
         App.Devices.Updated += (_, _) => UpdateStatus();
     }
@@ -217,6 +220,18 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     }
 
     private void OnRefreshClick(object sender, RoutedEventArgs e) => _ = RefreshAsync();
+
+    private void OnAddDevice(object sender, RoutedEventArgs e)
+    {
+        var dialog = new AddDeviceDialog(App.Settings.MyDevices) { Owner = this };
+        if (dialog.ShowDialog() == true)
+        {
+            App.Settings.MyDevices = dialog.SelectedIds;
+            App.Settings.Save();
+            SyncSettingsToUi();
+            _ = RefreshAsync();
+        }
+    }
 
     private void OnMinimize(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
