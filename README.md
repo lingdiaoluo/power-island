@@ -46,7 +46,7 @@
 
 ### 直接用
 
-到 Releases 下载 `PowerIsland.exe`，双击运行。
+到 [Releases](https://github.com/lingdiaoluo/power-island/releases/latest) 下载 **PowerIsland.exe**（约 75 MB），双击运行。
 
 - 关掉主窗口不会退出，程序留在托盘继续刷新；右键托盘图标 → `退出` 才是真正退出
 - 首次运行如果托盘图标被 Windows 收进 `^` 折叠区，拖到任务栏固定即可（程序也会自动向系统申请常显）
