@@ -1,5 +1,10 @@
 # 电量岛 PowerIsland
 
+[![build](https://github.com/lingdiaoluo/power-island/actions/workflows/build.yml/badge.svg)](https://github.com/lingdiaoluo/power-island/actions/workflows/build.yml)
+[![license](https://img.shields.io/badge/license-MIT-16a34a.svg)](LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-8.0-512BD4.svg)](https://dotnet.microsoft.com)
+[![platform](https://img.shields.io/badge/platform-Windows%2011-0078D4.svg)](#已知限制)
+
 一个轻量的 Windows 外设电量小工具：**主面板 + 任务栏电量图标 + 悬停气泡**，原生读取无线鼠标／键盘／耳机的电量。
 
 为 **VGN F1 MOBA** 做了原生协议支持，不需要安装 VGN HUB，也不改你的任何设备设置。
