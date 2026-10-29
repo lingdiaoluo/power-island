@@ -6,6 +6,10 @@ namespace PowerIsland.Services;
 public sealed class DeviceService
 {
     public ObservableCollection<Peripheral> Devices { get; } = new();
+
+    /// <summary>最近一次扫描到的全部候选（含被「我的设备」过滤掉的），供「添加外设」对话框使用。</summary>
+    public IReadOnlyList<Peripheral> AllScanned { get; private set; } = Array.Empty<Peripheral>();
+
     public DateTime LastUpdated { get; private set; } = DateTime.Now;
     public bool Busy { get; private set; }
 
@@ -21,10 +25,12 @@ public sealed class DeviceService
             var clock = System.Diagnostics.Stopwatch.StartNew();
             List<HidInterface> hid = await Task.Run(HidInventory.Enumerate);
             long enumerateMs = clock.ElapsedMilliseconds;
-            List<Peripheral> scanned = await Task.Run(() => Build(hid, new List<BluetoothDeviceInfo>(), settings));
-            Log.Write($"refresh timing: enumerate={enumerateMs}ms total={clock.ElapsedMilliseconds}ms devices={scanned.Count}");
-            Merge(scanned);
+
+            List<Peripheral> first = await Task.Run(() => Build(hid, new List<BluetoothDeviceInfo>(), settings));
+            AllScanned = first;
+            Merge(first.Where(p => ShouldShow(p, settings)).ToList());
             LastUpdated = DateTime.Now;
+            Log.Write($"refresh timing: enumerate={enumerateMs}ms total={clock.ElapsedMilliseconds}ms shown={Devices.Count}");
             Updated?.Invoke(this, EventArgs.Empty);
 
             // 2) 蓝牙外设最多等 1.5 秒，没有蓝牙适配器也不会卡住
@@ -41,7 +47,8 @@ public sealed class DeviceService
             if (bt.Count == 0) return;
 
             List<Peripheral> withBt = await Task.Run(() => Build(hid, bt, settings));
-            Merge(withBt);
+            AllScanned = withBt;
+            Merge(withBt.Where(p => ShouldShow(p, settings)).ToList());
             LastUpdated = DateTime.Now;
             Updated?.Invoke(this, EventArgs.Empty);
         }
@@ -51,14 +58,10 @@ public sealed class DeviceService
         }
     }
 
-    private static string Describe(List<Peripheral> devices) => devices.Count == 0
-        ? "no device"
-        : string.Join(" | ", devices.Select(d =>
-            $"{d.Name} vid={d.Vid:X4} pid={d.Pid:X4} battery={(d.Battery?.ToString() ?? "null")} online={d.Online}"));
-
     private static List<Peripheral> Build(List<HidInterface> hid, List<BluetoothDeviceInfo> bt, AppSettings settings)
     {
         var result = new List<Peripheral>();
+        var claimed = new HashSet<(ushort, ushort)>();
 
         foreach (KnownDevice known in KnownDevices.Distinct())
         {
@@ -66,16 +69,16 @@ public sealed class DeviceService
                                                              && h.UsagePage == known.UsagePage && h.Usage == known.Usage);
             HidInterface? wired = hid.FirstOrDefault(h => h.Vid == known.Vid && h.Pid == known.PidWired
                                                           && h.UsagePage == known.UsagePage && h.Usage == known.Usage);
-            string id = $"{known.Vid:X4}:{known.PidWireless:X4}";
             bool present = wireless != null || wired != null;
-            if (!ShouldShow(settings, id, present)) continue;
+            claimed.Add((known.Vid, known.PidWireless));
+            claimed.Add((known.Vid, known.PidWired));
 
             HidInterface? source = wireless ?? wired;
             BatteryReading? reading = present ? CompxReader.Query(source!, known.Protocol) : null;
 
             result.Add(new Peripheral
             {
-                Id = id,
+                Id = $"{known.Vid:X4}:{known.PidWireless:X4}",
                 Name = known.Name,
                 Meta = known.Meta,
                 Vendor = "VGN / VXE / ATK",
@@ -95,16 +98,15 @@ public sealed class DeviceService
             bool hasWireless = hid.Any(h => h.Vid == RazerReader.RazerVid && h.Pid == razer.PidWireless);
             bool hasWired = hid.Any(h => h.Vid == RazerReader.RazerVid && h.Pid == razer.PidWired);
             bool present = hasWireless || hasWired;
-
-            string razerId = $"{RazerReader.RazerVid:X4}:{razer.PidWireless:X4}";
-            if (!ShouldShow(settings, razerId, present)) continue;
+            claimed.Add((RazerReader.RazerVid, razer.PidWireless));
+            claimed.Add((RazerReader.RazerVid, razer.PidWired));
 
             bool wireless = hasWireless;
             BatteryReading? razerReading = present ? RazerReader.Query(razer, hid, wireless) : null;
 
             result.Add(new Peripheral
             {
-                Id = razerId,
+                Id = $"{RazerReader.RazerVid:X4}:{razer.PidWireless:X4}",
                 Name = razer.Name,
                 Meta = razer.Meta,
                 Vendor = "Razer",
@@ -119,7 +121,42 @@ public sealed class DeviceService
             });
         }
 
-        foreach (BluetoothDeviceInfo info in settings.MyDevices.Count == 0 ? bt : new List<BluetoothDeviceInfo>())
+        // 3) 型号表之外的设备：试标准 HID 电量（Usage 0x06/0x20），读到就当成一台可用设备
+        foreach (var group in hid.Where(h => !claimed.Contains((h.Vid, h.Pid)))
+                                 .GroupBy(h => (h.Vid, h.Pid)))
+        {
+            if (group.Key.Vid == RazerReader.RazerVid) continue;   // 雷蛇已单独处理，别重复试
+
+            // 每个型号最多试两个接口，优先报告长度大的（更有可能是电量通道）
+            foreach (HidInterface iface in group.OrderByDescending(h => h.FeatureLength + h.InputLength).Take(2))
+            {
+                BatteryReading? reading = GenericHidBattery.TryRead(iface);
+                if (reading == null) continue;
+
+                string name = string.IsNullOrWhiteSpace(iface.Product)
+                    ? $"外设 {group.Key.Vid:X4}:{group.Key.Pid:X4}"
+                    : iface.Product;
+
+                result.Add(new Peripheral
+                {
+                    Id = $"hid:{group.Key.Vid:X4}:{group.Key.Pid:X4}",
+                    Name = name,
+                    Meta = $"{group.Key.Vid:X4}:{group.Key.Pid:X4} · 标准 HID 电量",
+                    Vendor = string.IsNullOrWhiteSpace(iface.Manufacturer) ? "其他" : iface.Manufacturer,
+                    Kind = GuessKind(name),
+                    Link = group.Any(h => h.UsagePage == 0x0001) ? LinkKind.Wireless24 : LinkKind.Unknown,
+                    Battery = reading.Value.Level,
+                    Online = true,
+                    BatteryReadable = true,
+                    Vid = group.Key.Vid,
+                    Pid = group.Key.Pid
+                });
+                break;
+            }
+        }
+
+        // 4) 蓝牙：Windows 自己上报的电量（选中模式下只保留用户添加过的）
+        foreach (BluetoothDeviceInfo info in bt)
         {
             if (result.Any(r => string.Equals(r.Name, info.Name, StringComparison.OrdinalIgnoreCase))) continue;
 
@@ -137,13 +174,14 @@ public sealed class DeviceService
             });
         }
 
+        // 5) 剩下连电量都读不到的设备，只在用户手动打开开关时列出来
         if (settings.ShowUnknownDevices)
         {
             foreach (var group in hid.Where(h => !string.IsNullOrWhiteSpace(h.Product))
                                       .GroupBy(h => (h.Vid, h.Pid, h.Product)))
             {
-                bool already = result.Any(r => r.Vid == group.Key.Vid && r.Pid == group.Key.Pid);
-                if (already) continue;
+                if (claimed.Contains((group.Key.Vid, group.Key.Pid))) continue;
+                if (result.Any(r => r.Vid == group.Key.Vid && r.Pid == group.Key.Pid)) continue;
 
                 var first = group.First();
                 result.Add(new Peripheral
@@ -166,14 +204,14 @@ public sealed class DeviceService
         return result;
     }
 
-    /// <summary>自动模式：只显示实际插着的；手动添加过：只显示选中的（没插也显示为未连接）。</summary>
-    private static bool ShouldShow(AppSettings settings, string id, bool present)
-        => settings.MyDevices.Count > 0 ? settings.MyDevices.Contains(id) : present;
+    /// <summary>自动模式只显示在线的；手动添加过设备则只显示选中的（没插也留着显示未连接）。</summary>
+    private static bool ShouldShow(Peripheral device, AppSettings settings)
+        => settings.MyDevices.Count > 0 ? settings.MyDevices.Contains(device.Id) : device.Online;
 
     private static DeviceKind GuessKind(string name)
     {
         string n = name.ToLowerInvariant();
-        if (n.Contains("mouse") || n.Contains("鼠标") || n.Contains("鼠标")) return DeviceKind.Mouse;
+        if (n.Contains("mouse") || n.Contains("鼠标")) return DeviceKind.Mouse;
         if (n.Contains("keyboard") || n.Contains("键盘")) return DeviceKind.Keyboard;
         if (n.Contains("gamepad") || n.Contains("controller") || n.Contains("手柄") || n.Contains("xbox"))
             return DeviceKind.Gamepad;

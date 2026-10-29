@@ -15,25 +15,40 @@ public partial class AddDeviceDialog : Window
 
     public List<string> SelectedIds { get; private set; } = new();
 
-    public AddDeviceDialog(IEnumerable<string> selected)
+    public AddDeviceDialog(IEnumerable<string> selected, IEnumerable<CatalogEntry>? discovered = null)
     {
         InitializeComponent();
 
         var set = new HashSet<string>(selected);
         foreach (CatalogEntry entry in DeviceCatalog.All)
         {
-            var row = new CatalogRow(entry) { IsSelected = set.Contains(entry.Id) };
-            row.PropertyChanged += (_, e) =>
+            AddRow(entry, set);
+        }
+
+        // 当前实际扫到的设备（蓝牙 / 走标准 HID 电量的型号）也列进来，方便直接勾选
+        if (discovered != null)
+        {
+            foreach (CatalogEntry entry in discovered)
             {
-                if (e.PropertyName == nameof(CatalogRow.IsSelected)) UpdateCount();
-            };
-            _all.Add(row);
+                if (_all.Any(r => r.Entry.Id == entry.Id)) continue;
+                AddRow(entry, set);
+            }
         }
 
         DeviceList.ItemsSource = _visible;
         ApplyFilter(string.Empty);
         UpdateCount();
         Loaded += (_, _) => SearchBox.Focus();
+    }
+
+    private void AddRow(CatalogEntry entry, HashSet<string> selected)
+    {
+        var row = new CatalogRow(entry) { IsSelected = selected.Contains(entry.Id) };
+        row.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(CatalogRow.IsSelected)) UpdateCount();
+        };
+        _all.Add(row);
     }
 
     private void ApplyFilter(string keyword)

@@ -25,6 +25,7 @@ public sealed class Peripheral : INotifyPropertyChanged
     private int? _battery;
     private bool _online = true;
     private bool _charging;
+    private bool _batteryReadable = true;
 
     public string Id { get; init; } = "";
     public string Name { get; set; } = "";
@@ -34,7 +35,18 @@ public sealed class Peripheral : INotifyPropertyChanged
     public LinkKind Link { get; set; } = LinkKind.Unknown;
     public ushort Vid { get; set; }
     public ushort Pid { get; set; }
-    public bool BatteryReadable { get; set; } = true;
+    public bool BatteryReadable
+    {
+        get => _batteryReadable;
+        set
+        {
+            if (_batteryReadable == value) return;
+            _batteryReadable = value;
+            Raise();
+            Raise(nameof(BatteryHintText));
+            Raise(nameof(ShowBatteryHint));
+        }
+    }
 
     public int? Battery
     {
@@ -48,6 +60,8 @@ public sealed class Peripheral : INotifyPropertyChanged
             Raise(nameof(HasBattery));
             Raise(nameof(Level));
             Raise(nameof(BarValue));
+            Raise(nameof(ShowBatteryHint));
+            Raise(nameof(BatteryHintText));
         }
     }
 
@@ -74,6 +88,13 @@ public sealed class Peripheral : INotifyPropertyChanged
     public string BatteryText => Battery.HasValue ? $"{Battery.Value}%" : "—";
     public double Level => Battery ?? 0;
     public double BarValue => Battery ?? 0;
+
+    /// <summary>读不到电量时给出针对性的解释，别让"不支持"看起来像"没插好"。</summary>
+    public string BatteryHintText => !BatteryReadable
+        ? "这台设备没有开放电量接口，只能显示连接状态"
+        : "接收器未回传电量，动一下鼠标唤醒后会自动刷新";
+
+    public bool ShowBatteryHint => !HasBattery;
 
     public string KindLabel => Kind switch
     {

@@ -64,6 +64,16 @@ internal static class HidNative
     [DllImport("hid.dll", SetLastError = true)]
     public static extern int HidP_GetCaps(IntPtr preparsed, ref HIDP_CAPS caps);
 
+    public const int HIDP_STATUS_SUCCESS = 0x00110000;
+    public const int HidP_Input = 0;
+    public const int HidP_Output = 1;
+    public const int HidP_Feature = 2;
+
+    /// <summary>从报告缓冲区里取出某个 usage 的数值（标准 HID 电量走这里）。</summary>
+    [DllImport("hid.dll")]
+    public static extern int HidP_GetUsageValue(int reportType, ushort usagePage, ushort linkCollection,
+        ushort usage, out uint value, IntPtr preparsed, byte[] report, int reportLength);
+
     [DllImport("hid.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     public static extern bool HidD_GetProductString(SafeFileHandle h, char[] buffer, int len);
 
@@ -133,6 +143,12 @@ internal static class HidNative
     {
         var access = readWrite ? GENERIC_READ | GENERIC_WRITE : 0u;
         return CreateFile(path, access, FILE_SHARE_READ | FILE_SHARE_WRITE, IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero);
+    }
+
+    /// <summary>只读句柄：能读报告但不能写，适合只查询电量的设备。</summary>
+    public static SafeFileHandle OpenDeviceRead(string path)
+    {
+        return CreateFile(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero);
     }
 
     public static SafeFileHandle OpenDeviceOverlapped(string path, bool readWrite = true)

@@ -58,7 +58,7 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel>
                     <TextBlock Text="添加外设" FontSize="18" FontWeight="SemiBold" />
-                    <TextBlock Text="勾选你要监控的设备，插上后自动显示电量；不勾选任何设备则自动识别全部。"
+                    <TextBlock Text="勾选要监控的设备，插上后自动显示电量；不勾选则自动识别全部。列表之外的型号暂不支持读取电量。"
                                FontSize="11.5" Margin="0,4,0,0" Foreground="{DynamicResource Brush.TextSoft}" />
                 </StackPanel>
                 <Button Grid.Column="1" Style="{StaticResource IconButton}" Content="&#xE8BB;"

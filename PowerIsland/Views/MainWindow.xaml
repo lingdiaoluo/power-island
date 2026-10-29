@@ -121,10 +121,10 @@
                                                TextTrimming="CharacterEllipsis" />
 
                                     <!-- 读取不到时的提示 -->
-                                    <TextBlock Text="接收器未回传电量，动一下鼠标唤醒后会自动刷新"
+                                    <TextBlock Text="{Binding BatteryHintText}"
                                                FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"
                                                Foreground="{DynamicResource Brush.TextSoft}"
-                                               Visibility="{Binding HasBattery, Converter={StaticResource InverseBoolToVis}}" />
+                                               Visibility="{Binding ShowBatteryHint, Converter={StaticResource BoolToVis}}" />
 
                                     <!-- 状态 + 电量条 -->
                                     <Grid Margin="0,14,0,0">
@@ -268,7 +268,7 @@
                         </StackPanel>
 
                         <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
-                            <TextBlock Text="显示未知设备" Width="112" FontSize="12.5" VerticalAlignment="Center"
+                            <TextBlock Text="显示无电量设备" Width="112" FontSize="12.5" VerticalAlignment="Center"
                                        Foreground="{DynamicResource Brush.TextSoft}" />
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton x:Name="UnknownOn" Style="{StaticResource Chip}" Content="显示"

@@ -223,7 +223,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void OnAddDevice(object sender, RoutedEventArgs e)
     {
-        var dialog = new AddDeviceDialog(App.Settings.MyDevices) { Owner = this };
+        var dialog = new AddDeviceDialog(App.Settings.MyDevices, BuildDiscoveredEntries()) { Owner = this };
         if (dialog.ShowDialog() == true)
         {
             App.Settings.MyDevices = dialog.SelectedIds;
@@ -231,6 +231,31 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             SyncSettingsToUi();
             _ = RefreshAsync();
         }
+    }
+
+    /// <summary>把这次实际扫到的蓝牙 / 标准 HID 设备做成目录条目，一起列进对话框。</summary>
+    private static List<CatalogEntry> BuildDiscoveredEntries()
+    {
+        var list = new List<CatalogEntry>();
+        var seen = new HashSet<string>();
+        foreach (Peripheral device in App.Devices.AllScanned)
+        {
+            bool dynamicDevice = device.Id.StartsWith("bt:", StringComparison.Ordinal) ||
+                                 (device.Id.StartsWith("hid:", StringComparison.Ordinal) && device.BatteryReadable);
+            if (!dynamicDevice || !seen.Add(device.Id)) continue;
+
+            string brand = device.Vendor switch
+            {
+                "Bluetooth" => "Bluetooth",
+                null or "" => "其他",
+                _ => device.Vendor
+            };
+
+            list.Add(new CatalogEntry(device.Id, brand, device.Name, device.Meta, device.Kind,
+                device.Vid, device.Pid, 0));
+        }
+
+        return list;
     }
 
     private void OnMinimize(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
