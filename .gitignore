@@ -25,3 +25,7 @@ err*.log
 *.tmp
 Thumbs.db
 desktop.ini
+
+# 另一个独立项目，单独仓库
+SpaceIsland/
+dist-space/

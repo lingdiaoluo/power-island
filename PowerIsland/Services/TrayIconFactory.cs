@@ -18,10 +18,9 @@ public static class TrayIconFactory
     {
         bool known = level.HasValue;
         int value = level ?? 0;
-        Color accent = !known ? Color.FromArgb(255, 138, 144, 153)
-            : value <= lowThreshold / 2 ? Color.FromArgb(255, 220, 38, 38)
-            : value <= lowThreshold ? Color.FromArgb(255, 239, 108, 0)
-            : Color.FromArgb(255, 22, 163, 74);
+        Color accent = !known ? Color.FromArgb(255, 168, 174, 182)
+            : value <= lowThreshold ? Color.FromArgb(255, 255, 90, 82)
+            : Color.FromArgb(255, 45, 211, 107);
 
         var frames = new List<byte[]>();
         foreach (int size in Sizes)
@@ -54,18 +53,42 @@ public static class TrayIconFactory
         Bitmap bmp = NewCanvas(size);
         using (var g = Graphics.FromImage(bmp))
         {
-            float pad = Math.Max(0.5f, size * 0.03f);
-            var rect = new RectangleF(pad, pad, size - pad * 2, size - pad * 2);
-            using var path = RoundedRect(rect, size * 0.24f);
-            using var fill = new LinearGradientBrush(rect, Lighten(accent), accent, 90f);
-            g.FillPath(fill, path);
-
             string text = level.HasValue ? level.Value.ToString() : "--";
-            float fontSize = level is >= 100 ? size * 0.40f : level.HasValue ? size * 0.48f : size * 0.42f;
-            using var font = new Font("Segoe UI", fontSize, FontStyle.Bold, GraphicsUnit.Pixel);
-            using var brush = new SolidBrush(Color.White);
-            var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-            g.DrawString(text, font, brush, new RectangleF(0, -size * 0.02f, size, size), format);
+
+            // 位数越多字越小，保证两位数能塞满整个图标、三位数不溢出
+            float fontSize = text.Length switch
+            {
+                >= 3 => size * 0.52f,
+                2 => size * 0.72f,
+                _ => size * 0.80f
+            };
+
+            using var family = new FontFamily("Segoe UI");
+            using var path = new GraphicsPath();
+            path.AddString(text, family, (int)FontStyle.Bold, fontSize, new PointF(0, 0),
+                StringFormat.GenericTypographic);
+
+            // 按字形实际边界居中，数字才能顶到图标边缘
+            RectangleF bounds = path.GetBounds();
+            using (var shift = new Matrix())
+            {
+                shift.Translate((size - bounds.Width) / 2f - bounds.X,
+                    (size - bounds.Height) / 2f - bounds.Y);
+                path.Transform(shift);
+            }
+
+            // 一圈细描边：浅色任务栏上也能看清，深色任务栏上不碍事
+            if (size >= 16)
+            {
+                using var outline = new Pen(Color.FromArgb(150, 16, 18, 22), Math.Max(0.8f, size * 0.05f))
+                {
+                    LineJoin = LineJoin.Round
+                };
+                g.DrawPath(outline, path);
+            }
+
+            using var fill = new SolidBrush(accent);
+            g.FillPath(fill, path);
         }
         return bmp;
     }
