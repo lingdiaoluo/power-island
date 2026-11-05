@@ -48,49 +48,60 @@ public static class TrayIconFactory
         return bmp;
     }
 
+    /// <summary>
+    /// 画纯数字图标。关键做法是先在 8 倍画布上用字形路径绘制，再高质量缩回目标尺寸，
+    /// 这样 16px 下边缘也不会出现锯齿。
+    /// </summary>
     private static Bitmap DrawNumber(int size, int? level, Color accent)
     {
-        Bitmap bmp = NewCanvas(size);
-        using (var g = Graphics.FromImage(bmp))
-        {
-            string text = level.HasValue ? level.Value.ToString() : "--";
+        const int superSample = 8;
+        int big = size * superSample;
+        string text = level.HasValue ? level.Value.ToString() : "--";
 
-            // 位数越多字越小，保证两位数能塞满整个图标、三位数不溢出
-            float fontSize = text.Length switch
-            {
-                >= 3 => size * 0.52f,
-                2 => size * 0.72f,
-                _ => size * 0.80f
-            };
+        using var layer = new Bitmap(big, big, PixelFormat.Format32bppArgb);
+        using (var g = Graphics.FromImage(layer))
+        {
+            g.Clear(Color.Transparent);
+            g.SmoothingMode = SmoothingMode.HighQuality;
 
             using var family = new FontFamily("Segoe UI");
             using var path = new GraphicsPath();
-            path.AddString(text, family, (int)FontStyle.Bold, fontSize, new PointF(0, 0),
+            path.AddString(text, family, (int)FontStyle.Bold, 100f, PointF.Empty,
                 StringFormat.GenericTypographic);
 
-            // 按字形实际边界居中，数字才能顶到图标边缘
             RectangleF bounds = path.GetBounds();
-            using (var shift = new Matrix())
-            {
-                shift.Translate((size - bounds.Width) / 2f - bounds.X,
-                    (size - bounds.Height) / 2f - bounds.Y);
-                path.Transform(shift);
-            }
+            if (bounds.Width <= 0 || bounds.Height <= 0) return new Bitmap(size, size);
 
-            // 一圈细描边：浅色任务栏上也能看清，深色任务栏上不碍事
-            if (size >= 16)
-            {
-                using var outline = new Pen(Color.FromArgb(150, 16, 18, 22), Math.Max(0.8f, size * 0.05f))
-                {
-                    LineJoin = LineJoin.Round
-                };
-                g.DrawPath(outline, path);
-            }
+            // 两位数字占到 92% 宽 / 76% 高：够饱满又不会被切边
+            float scale = Math.Min(big * 0.94f / bounds.Width, big * 0.84f / bounds.Height);
 
-            using var fill = new SolidBrush(accent);
-            g.FillPath(fill, path);
+            // GDI+ 的变换默认是 Prepend，必须显式 Append 才能按书写顺序生效
+            using var matrix = new Matrix();
+            matrix.Translate(-bounds.X, -bounds.Y, MatrixOrder.Append);
+            matrix.Scale(scale, scale, MatrixOrder.Append);
+            matrix.Translate((big - bounds.Width * scale) / 2f,
+                (big - bounds.Height * scale) / 2f, MatrixOrder.Append);
+            path.Transform(matrix);
+
+            using var brush = new SolidBrush(accent);
+
+            // 同色描边轻微加粗笔画，缩回小尺寸后依然醒目
+            using (var pen = new Pen(brush, big * 0.055f) { LineJoin = LineJoin.Round })
+                g.DrawPath(pen, path);
+
+            g.FillPath(brush, path);
         }
-        return bmp;
+
+        var result = new Bitmap(size, size, PixelFormat.Format32bppArgb);
+        using (var g = Graphics.FromImage(result))
+        {
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            g.SmoothingMode = SmoothingMode.HighQuality;
+            g.DrawImage(layer, new Rectangle(0, 0, size, size));
+        }
+
+        return result;
     }
 
     private static Bitmap DrawGlyph(int size, int? level, Color accent)
