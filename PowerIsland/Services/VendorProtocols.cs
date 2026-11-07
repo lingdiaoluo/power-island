@@ -188,8 +188,19 @@ public static class CompxReader
             }
 
             if (response[0] != 0x08 || response[1] != 0x04) return null;
-            int level = response[6];
-            return level is >= 0 and <= 100 ? new BatteryReading(level, response[7] != 0) : null;
+
+            bool charging = response[7] != 0;
+            int coarse = response[6];   // 固件自己算的整数百分比，粒度较粗
+
+            // 第 9-10 字节是电池电压（大端，mV）。官方驱动就是按这条曲线换算的，
+            // 用它算出来的值才跟驱动页面对得上。
+            int millivolts = (response[8] << 8) | response[9];
+
+            if (!charging && millivolts is >= 3200 and <= 4250)
+                return new BatteryReading(BatteryCurve.FromMillivolts(millivolts), false);
+
+            // 充电时电压被抬高，不能拿来算；或者读不到合理电压时退回固件值
+            return coarse is >= 0 and <= 100 ? new BatteryReading(coarse, charging) : null;
         }
     }
 }
